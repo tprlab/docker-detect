@@ -6,18 +6,14 @@ import os
 import numpy as np
 
 #URL = "http://192.168.1.243:5001/detect"
-URL = "http://192.168.1.218:5001/detect"
-
-
-def request_with_file(url, path):
-
+URL = "http://192.168.1.218:80/detect"
 
 def detect_file(path):
     with open(path, "rb") as f:
         params = dict (file = f)
-        resp = requests.post(url, files=params, verify=False)
+        resp = requests.post(URL, files=params, verify=False)
         if resp.status_code == requests.codes.ok:
-            return True, resp.json
+            return True, resp.json()
         return False, rsp.content
 
 
