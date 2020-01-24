@@ -11,7 +11,7 @@ RUN tar -xvf /ssd_mobilenet_v1_coco_11_06_2017.tar.gz
 ADD https://github.com/tprlab/docker-detect/archive/master.zip /
 RUN unzip /master.zip
 
-EXPOSE 5001
+EXPOSE 80
 
 #CMD ["python3", "/docker-detect-master/detect-app/dnn_ctrl.py", "/docker-detect-master/detect-app/data/pic.jpg"]
 CMD ["python3", "/docker-detect-master/detect-app/app.py"]
