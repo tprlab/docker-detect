@@ -4,30 +4,94 @@ import json
 import sys
 import os
 import numpy as np
+import cv2 as cv
+import io
 
-#URL = "http://192.168.1.243:5001/detect"
-URL = "http://192.168.1.218:80/detect"
+URL = "http://my-detect-server/detect"
+
+
+
+colors = [
+    (81,0,81),
+    (244,35,232),
+    (70,70,70),
+    (102,102,156),
+    (190,153,153),
+    (153,153,153),
+    (250,170,30),
+    (220,220,0),
+    (107,142,35),
+    (152,251,152),
+    (70,130,180),
+    (220,20,60),
+    (255,0,0),
+    (0,0,142),
+    (0,0,70),
+    (0,60,100),
+    (0,80,100),
+    (0,0,230),
+    (119,11,32)
+]
+
+def get_color(idx):
+    return colors[idx % len(colors)]
+ 
+
+
+def request_detect(f):
+    params = dict (file = f)
+    resp = requests.post(URL, files=params, verify=False)
+    if resp.status_code == requests.codes.ok:
+        return 0, resp.json()
+    return resp.status_code, resp.content
+
+
+def read_file(path):
+    with open(path, "rb") as f:
+        return f.read()
+
+def to_memfile(content):
+    memfile = io.BytesIO()
+    memfile.write(content)
+    memfile.seek(0)
+    return memfile
 
 def detect_file(path):
     with open(path, "rb") as f:
-        params = dict (file = f)
-        resp = requests.post(URL, files=params, verify=False)
-        if resp.status_code == requests.codes.ok:
-            return True, resp.json()
-        return False, rsp.content
+        return request_detect(f)
+
+
+def detect_img(img):
+    _, img_encoded = cv.imencode('.jpg', img)
+    return request_detect(to_memfile(img_encoded))
+
+def draw_detection(img, d, draw_text=True):
+    n = 0
+    for a in d:
+        clr = get_color(n)
+        cv.rectangle(img, (a["x"], a["y"]), (a["x"] + a["w"], a["y"] + a["h"]), clr, thickness=2)
+        word = a["name"] + "(" + str(int(100. * a["score"])) + "%)" 
+        if draw_text:
+            cv.putText(img, word, (a["x"] + 5, a["y"] + 25), cv.FONT_HERSHEY_SIMPLEX, 0.5, clr, 1, cv.LINE_AA)
+        n += 1
+
 
 
 if __name__ == "__main__":
     t = time.time()    
-    rc, R = detect_file("../detect-app/data/pic.jpg")
+    #err, R = detect_file(sys.argv[1])
+    img = cv.imread(sys.argv[1])
+    err, R = detect_img(img)
     t = time.time() - t
 
-    if rc:    
+    if err == 0:    
         for r in R:
-            print(r)    
+            print(r) 
         print("Detection done in {:.4f} seconds".format(t))
+        draw_detection(img, R, True)
+        cv.imwrite("out.jpg", img)
     else:
-        print (R)
+        print (err, R)
 
 
 
