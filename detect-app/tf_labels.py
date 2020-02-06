@@ -14,5 +14,7 @@ def initLabels(path):
 def getLabel(id):
     if category_index is None:
         return "Not initialized"
+    if not id in category_index:
+        return "unknown"
     e = category_index[id]
     return e["name"] if e is not None else ""

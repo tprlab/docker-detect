@@ -7,18 +7,13 @@ import numpy as np
 import cv2 as cv
 import io
 
-URL = "http://my-detect-server/detect"
-
-
+URL = "http://<steamer-host>:8001/detect"
 
 colors = [
-    (81,0,81),
-    (244,35,232),
-    (70,70,70),
-    (102,102,156),
-    (190,153,153),
-    (153,153,153),
-    (250,170,30),
+    (250,0,0),
+    (0,0,120),
+    (0,0,0),
+    (0,250,0),
     (220,220,0),
     (107,142,35),
     (152,251,152),
@@ -30,7 +25,10 @@ colors = [
     (0,60,100),
     (0,80,100),
     (0,0,230),
-    (119,11,32)
+    (119,11,32),
+    (70,70,70),
+    (102,102,156),
+    (190,153,153),
 ]
 
 def get_color(idx):
@@ -39,11 +37,14 @@ def get_color(idx):
 
 
 def request_detect(f):
-    params = dict (file = f)
-    resp = requests.post(URL, files=params, verify=False)
-    if resp.status_code == requests.codes.ok:
-        return 0, resp.json()
-    return resp.status_code, resp.content
+    try:
+        params = dict (file = f)
+        resp = requests.post(URL, files=params, verify=False)
+        if resp.status_code == requests.codes.ok:
+            return 0, resp.json()
+        return resp.status_code, resp.content
+    except:
+        return 503, None
 
 
 def read_file(path):
@@ -66,6 +67,8 @@ def detect_img(img):
     return request_detect(to_memfile(img_encoded))
 
 def draw_detection(img, d, draw_text=True):
+    if d is None:
+        return
     n = 0
     for a in d:
         clr = get_color(n)
