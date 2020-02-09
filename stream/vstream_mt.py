@@ -12,7 +12,7 @@ import threading
 import detect_client as detect
 import logging
 
-M = 5
+M = 4
 
 log_file = "video_mt.log"
 logging.basicConfig(filename=log_file,level=logging.DEBUG, format='%(asctime)s.%(msecs)03d %(threadName)s %(levelname)-8s %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
@@ -25,54 +25,43 @@ Q = deque()
 
 app = Flask(__name__)
 
-vs = cv.VideoCapture("path")
+vs = cv.VideoCapture("/home/pi/street-320-na.mp4")
+#vs.set(cv.CAP_PROP_FRAME_WIDTH, 320)
+#vs.set(cv.CAP_PROP_FRAME_HEIGHT, 240)
 
-def handle_frame(frame, n):
+def handle_frame(frame):
     t = time.time()
-    err, D = detect.detect_img(frame)
+    err, jpeg_d = detect.detect_draw_img(frame)
     t = time.time() - t;
-    logging.debug(("Detection {} done in {:.4f} seconds".format(n, t), D))
-
-    if err != 0:
-        D = None
-
-    return (n, frame, D)
-
-def handle_frame_x(a):
-    ret = handle_frame(a["frame"], a["n"])
-    return ret
-
-n = 0
-        
+    logging.debug("Detection done in {:.4f} seconds".format(t))
+    return jpeg_d if err == 0 else None
+       
 def generate():
     global n
     while True:
         rc, frame = vs.read()
+        #handle_frame(frame)
         if frame is not None:
-            frame_copy = frame.copy()
-            future = executor.submit(handle_frame_x, ({"frame" : frame_copy, "n" : n}))
-            n += 1
+            future = executor.submit(handle_frame, (frame.copy()))
             Q.append(future)
+            #print("Added", len(Q))
 
         keep_polling = len(Q) > 0
         while(keep_polling):            
             top = Q[0]
             if top.done():
-                (n, frame, D) = top.result()
+                outFrame = top.result()
                 Q.popleft()
-                try:
-                    if D is not None:
-                        detect.draw_detection(frame, D)
-                except:
-                    logging.error(("Wrong d", D))
-
-                (rc, outFrame) = cv.imencode(".jpg", frame)
-                if rc:
+                #print("Done frame", n)
+                #(rc, outFrame) = cv.imencode(".jpg", frame)
+                if outFrame:
                     print("Frame", datetime.datetime.now())
                     yield(b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + bytearray(outFrame) + b'\r\n')
                 keep_polling = len(Q) > 0
             else:
                 keep_polling = len(Q) >= M
+                #if keep_polling:
+                #    time.sleep(0.1)
 
 
 @app.route("/stream")

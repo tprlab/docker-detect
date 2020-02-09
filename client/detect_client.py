@@ -7,7 +7,7 @@ import numpy as np
 import cv2 as cv
 import io
 
-URL = "http://<steamer-host>:8001/detect"
+URL = "http://192.168.1.243:8001"
 
 colors = [
     (250,0,0),
@@ -39,12 +39,22 @@ def get_color(idx):
 def request_detect(f):
     try:
         params = dict (file = f)
-        resp = requests.post(URL, files=params, verify=False)
+        resp = requests.post(URL + "/detect", files=params, verify=False)
         if resp.status_code == requests.codes.ok:
             return 0, resp.json()
         return resp.status_code, resp.content
     except:
         return 503, None
+
+def request_detect_draw(f):
+    try:
+        params = dict (file = f)
+        resp = requests.post(URL + "/ddetect", files=params, verify=False)
+        if resp.status_code == requests.codes.ok:
+            return 0, resp.content
+    except:
+        return 503, None
+
 
 
 def read_file(path):
@@ -61,10 +71,20 @@ def detect_file(path):
     with open(path, "rb") as f:
         return request_detect(f)
 
+def detect_draw(path):
+    with open(path, "rb") as f:
+        return request_detect_draw(f)
+
+
 
 def detect_img(img):
     _, img_encoded = cv.imencode('.jpg', img)
     return request_detect(to_memfile(img_encoded))
+
+def detect_draw_img(img):
+    _, img_encoded = cv.imencode('.jpg', img)
+    return request_detect_draw(to_memfile(img_encoded))
+
 
 def draw_detection(img, d, draw_text=True):
     if d is None:
@@ -83,9 +103,14 @@ def draw_detection(img, d, draw_text=True):
 if __name__ == "__main__":
     t = time.time()    
     #err, R = detect_file(sys.argv[1])
-    img = cv.imread(sys.argv[1])
-    err, R = detect_img(img)
+    #img = cv.imread(sys.argv[1])
+    #err, R = detect_img(img)
+    err, R = detect_draw(sys.argv[1])
     t = time.time() - t
+
+    with open("out.jpg", 'wb') as f:
+        f.write(R)
+    """
 
     if err == 0:    
         for r in R:
@@ -95,6 +120,7 @@ if __name__ == "__main__":
         cv.imwrite("out.jpg", img)
     else:
         print (err, R)
+    """
 
 
 

@@ -38,6 +38,12 @@ def get_request_file(request):
     return np.fromstring(input_file.getvalue(), dtype=np.uint8)
 
 
+def send_blob(blob, mime_type):
+    out_file = io.BytesIO()
+    out_file.write(blob)
+    out_file.seek(0)
+    return send_file(out_file, mimetype=mime_type)
+
 
 
 @app.route('/')
@@ -58,7 +64,21 @@ def detect():
     return jsonify(ret), requests.codes.ok
 
 
+@app.route('/ddetect', methods=['POST'])
+def detect_draw():
+    data = get_request_file(request)
+    if data is None:
+        "file", requests.codes.bad_request
+
+    rc, jpg = ctrl.detect_draw(data)
+    if not rc:
+        return ret, requests.codes.bad_request
+    return send_blob(jpg, "image/jpeg")
+
+
+
+
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=80, debug=True, threaded=True, use_reloader=False)
+    app.run(host='0.0.0.0', port=80, debug=True, threaded=False, use_reloader=False)
 

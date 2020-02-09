@@ -4,6 +4,7 @@ import tf_labels
 import time
 import sys
 import logging
+import detect_draw as dd
 
 
 net = None
@@ -61,6 +62,15 @@ def detect(img, thr = 0.3):
     if not rc:
         return rc, out
     return True, build_detection(out, thr, rows, cols)
+
+def detect_draw(img, thr = 0.3):
+    rc, d = detect(img, thr)
+    if not rc:
+        return rc, d
+
+    dd.draw_detection(img, d)
+    return True, img
+
 
 
 
