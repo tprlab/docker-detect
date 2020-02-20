@@ -33,4 +33,9 @@ There are 2 options:
 * basic, using synchronous frames handling
 * multithread, sending multiple frames to detector (The best option is to use the same number of threads as nodes in docker cluster, 10 nodes should be enough to handle realtime video without noticeable delays)
 
+## More info
+
+* [Habr(Russian)](https://habr.com/ru/post/485406)
+
+
 
