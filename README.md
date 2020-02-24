@@ -34,8 +34,9 @@ There are 2 options:
 * multithread, sending multiple frames to detector (The best option is to use the same number of threads as nodes in docker cluster, 10 nodes should be enough to handle realtime video without noticeable delays)
 
 ## More info
+* [Toward Data Science](https://towardsdatascience.com/how-to-stream-video-with-real-time-object-detection-on-raspberry-pi-f6503c46c7f9)
 
-* [Habr(Russian)](https://habr.com/ru/post/485406)
+* [Habr (Russian)](https://habr.com/ru/post/485406)
 
 
 
